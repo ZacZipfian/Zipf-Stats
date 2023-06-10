@@ -1,0 +1,48 @@
+<h4> Hello Genie! </h4>
+<div class="row">
+    <div class="col col-4 col-sm">
+        <p>Upload box</p>
+    </div>
+    <div class="col col-4 col-sm">
+        <p>button</p>
+        <button v-on:click="start = !start" :label="Start"></button>
+    </div>
+    <div class="col col-4 col-sm">
+        <p>General statistics</p>
+        <p v-text="msg"><br /></p>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-6 col-sm">
+        <p>Zipf</p>
+        <plotly :data="zipfplot"></plotly>
+    </div>
+    <div class="col col-6 col-sm">
+        <p>Symbol dist</p>
+        <plotly :data="symb_distr"></plotly>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-6 col-sm">
+        <p>select symbol</p>
+        <q-select v-model="markov_sel" :table-colspan="Markov_opts"></q-select>
+    </div>
+    <div class="col col-6 col-sm">
+        <p>symbol dist 2</p>
+        <plotly :data="markovprobdist"></plotly>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-3">
+        <p>slider</p>
+        <q-slider v-model="markov_length" :label="true"></q-slider>
+    </div>
+    <div class="col col-3">
+        <p>button 2</p>
+        <q-btn v-model="generateM"></q-btn>
+    </div>
+    <div class="col">
+        <p>Generated text</p>
+        <h6 v-text="genText"></h6>
+    </div>
+</div>
