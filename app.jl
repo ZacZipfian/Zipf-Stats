@@ -31,7 +31,7 @@ function doc_processing(FILE_PATH, Document_name)
     words = [first(p) for p in Col_words] #return me 
     countW = [last(p) for p in Col_words] #return me 
     distrW = [(last(p)/Word_count) for p in Col_words]
-    df1 = DataFrame(word = words, count = countW, distribution = distrW)
+    df1 = DataFrame(row = log.(1:unq_wrds), word = words, count = log.(countW), distribution = distrW)
 
 
     #symbols
@@ -45,7 +45,7 @@ function doc_processing(FILE_PATH, Document_name)
     symsl = [first(p) for p in CSym] #return me 
     countS = [last(p) for p in CSym] 
     S_dist = [last(p)/(sum(countS)) for p in CSym] #return me  
-    df2 = DataFrame(symbol = symsl, count = countS, distribution = S_dist)
+    df2 = DataFrame(row = 1:length(countS), symbol = symsl, count = countS, distribution = S_dist)
 
     
     #Markov chain
@@ -55,7 +55,7 @@ function doc_processing(FILE_PATH, Document_name)
     CPrev = DocuString[1]
     markov_chain = zeros(n,n)
 
-    for i in 2:length(ValidInx)
+    for i in 2:length(ValidIndx)
         CCur = DocuString[ValidIndx[i]]
         Index1 = findall( x -> x == string(CPrev), plcS )
         Index2 = findall( x -> x == string(CCur), plcS )
@@ -103,16 +103,13 @@ end
     # watch a variable and execute a block of code when
     # its value changes
     @onchange start begin
-        @show Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, transition_matrix = doc_processing(FILE_PATH, Document_name)
+        Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, transition_matrix = doc_processing(FILE_PATH, Document_name)
         msg = "Word count: $Word_count, Unique words: $unq_wrds, Average word length: $av_wrd_count, Text entropy: $shan_entropy"
-        zipfplot = PlotData[df1, :count]
-        symb_distr = PlotData[df2, :distribution]
+        zipfplot = plotdata(df1, :row, :count; groupfeature = :word)
+        symb_distr = plotdata(df2, :row, :distribution, plot=StipplePlotly.Charts.PLOT_TYPE_BAR; groupfeature = :symbol)
         Markov_opts = df2[!, :symbol]
         indexii = findall( x -> x == string(markov_sel), Markov_opts )
-        markovprobdist = PlotData[transition_matrix[indexii, :]]
-        
-       
-
+        markovprobdist = plotdata(transition_matrix[indexii, :])
     end
 end
 
