@@ -4,8 +4,7 @@
         <p>Upload box</p>
     </div>
     <div class="col col-4 col-sm">
-        <p>button</p>
-        <button v-on:click="start = !start" :label="Start"></button>
+        <q-btn style="background: #17a3d1; color: white" v-on:click="start = !start" label="Start"></q-btn>
     </div>
     <div class="col col-4 col-sm">
         <p>General statistics</p>
@@ -25,21 +24,20 @@
 <div class="row">
     <div class="col col-6 col-sm">
         <p>select symbol</p>
-        <q-select v-model="markov_sel" :table-colspan="Markov_opts"></q-select>
+        <q-select v-model="markov_sel" :options="Markov_opts"></q-select>
     </div>
     <div class="col col-6 col-sm">
-        <p>symbol dist 2</p>
+        <p v-text="graphname"></p>
         <plotly :data="markovprobdist"></plotly>
     </div>
 </div>
 <div class="row">
     <div class="col col-3">
         <p>slider</p>
-        <q-slider v-model="markov_length" :label="true"></q-slider>
+        <q-slider v-model="markov_length" :label="true" :min="10" :max="200"></q-slider>
     </div>
     <div class="col col-3">
-        <p>button 2</p>
-        <q-btn v-model="generateM"></q-btn>
+        <q-btn style="background: #da7c2e; color: white" v-on:click="generateM = !generateM" label="Generate"></q-btn>
     </div>
     <div class="col">
         <p>Generated text</p>
