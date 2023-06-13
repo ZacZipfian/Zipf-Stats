@@ -1,46 +1,60 @@
-<h4> Hello Genie! </h4>
+<h1> Text file analysis </h1>
 <div class="row">
     <div class="col col-4 col-sm">
-        <p>Upload box</p>
+            <q-uploader
+            style="max-width: 300px"
+            url="http://localhost:8000/"
+            label="Upload Text File (.txt)"
+            max-files="1"
+            accept=".txt"
+            method="POST"
+            field__name="txt_file"
+            color="grey"
+          /> 
     </div>
     <div class="col col-4 col-sm">
-        <q-btn style="background: #17a3d1; color: white" v-on:click="start = !start" label="Start"></q-btn>
+        <h4>select file</h4>
+        <q-select v-model="Document_sel" :options="upfiles"></q-select>
     </div>
     <div class="col col-4 col-sm">
-        <p>General statistics</p>
+        <h6>General statistics</h6>
         <p v-text="msg"><br /></p>
     </div>
 </div>
 <div class="row">
     <div class="col col-6 col-sm">
-        <p>Zipf</p>
-        <plotly :data="zipfplot"></plotly>
+        <h4>Zipf distribution</h4>
+        <plotly :data="zipfplot" :layout="layzipf"></plotly> 
     </div>
     <div class="col col-6 col-sm">
-        <p>Symbol dist</p>
-        <plotly :data="symb_distr"></plotly>
+        <h4>Symbol distribution</h4>
+        <plotly :data="symb_distr" :layout="laysymb"></plotly> 
     </div>
 </div>
+<h2> Markov chain analysis </h2>
 <div class="row">
     <div class="col col-6 col-sm">
-        <p>select symbol</p>
+        <h4>select symbol</h4>
         <q-select v-model="markov_sel" :options="Markov_opts"></q-select>
     </div>
     <div class="col col-6 col-sm">
-        <p v-text="graphname"></p>
-        <plotly :data="markovprobdist"></plotly>
+        <h4 v-text="graphname"></h4>
+        <plotly :data="markovprobdist" :layout="laymarkov"></plotly>
     </div>
 </div>
 <div class="row">
+
+</div>
+<div class="row">
     <div class="col col-3">
-        <p>slider</p>
+        <h5>Length of generated text</h5>
         <q-slider v-model="markov_length" :label="true" :min="10" :max="200"></q-slider>
     </div>
     <div class="col col-3">
         <q-btn style="background: #da7c2e; color: white" v-on:click="generateM = !generateM" label="Generate"></q-btn>
     </div>
-    <div class="col">
-        <p>Generated text</p>
+    <div class="col st-module">
+        <h5>Generated text: <br></h5>
         <h6 v-text="genText"></h6>
     </div>
 </div>
