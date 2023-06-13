@@ -1,8 +1,15 @@
 module App
 # set up Genie development environmet
-using GenieFramework
-using StatsBase, DataFrames
+using GenieFramework, StipplePlotly
+using StatsBase, DataFrames, Distributions
 @genietools
+
+####
+Genie.config.cors_headers["Access-Control-Allow-Origin"]  =  "*"
+Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type"
+Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+Genie.config.cors_allowed_origins = ["*"]
+####
 
 const FILE_PATH = "upload"
 mkpath(FILE_PATH)
@@ -46,12 +53,12 @@ function doc_processing(FILE_PATH, Document_name)
     WordsString = lowercase(WordsString)
     WordVector = split(WordsString, " ")  
     WordVector = filter!(e->e!="",WordVector)
-    Word_count = length(WordVector)  #return me 
+    Word_count = length(WordVector)  
     Col_words = countmap(WordVector)
-    unq_wrds = length(Col_words)     #return me 
+    unq_wrds = length(Col_words)     
     Col_words = sort(collect(Col_words), by=x->x[2], rev=true)
-    words = [first(p) for p in Col_words] #return me 
-    countW = [last(p) for p in Col_words] #return me 
+    words = [first(p) for p in Col_words] 
+    countW = [last(p) for p in Col_words]
     distrW = [(last(p)/Word_count) for p in Col_words]
     df1 = DataFrame(row = log.(1:unq_wrds), word = words, count = log.(countW), distribution = distrW)
 
@@ -64,9 +71,9 @@ function doc_processing(FILE_PATH, Document_name)
     symbols = split(DocuString, "")
     CSym = countmap(symbols)
     CSym = sort(collect(CSym), by=x->x[2], rev=true)
-    symsl = [first(p) for p in CSym] #return me 
+    symsl = [first(p) for p in CSym]
     countS = [last(p) for p in CSym] 
-    S_dist = [last(p)/(sum(countS)) for p in CSym] #return me  
+    S_dist = [(last(p)/(sum(countS))*100) for p in CSym]  
     df2 = DataFrame(row = 1:length(countS), symbol = symsl, count = countS, distribution = S_dist)
 
     
@@ -84,21 +91,21 @@ function doc_processing(FILE_PATH, Document_name)
         markov_chain[Index1[1], Index2[1]] += 1
         CPrev = CCur
     end
-    transition_matrix = TransMatxx(markov_chain) #return me 
+    transition_matrix = TransMatxx(markov_chain)
     df3 = DataFrame(rotr90(reverse(transition_matrix, dims = 1)), :auto)
     df3 = rename!(df3, ["x$i" => namess for (i, namess) in enumerate(plcS)])
     df3[!, :symb] = plcS
-    df3[!, :rank] = 1:88
+    df3[!, :rank] = 1:(size(df2,1))
 
     #miscellaneous
     trw = 0
     for j in 1:unq_wrds
         trw = trw + (length(words[j]) * countW[j])
     end
-    av_wrd_count = (trw / Word_count) #return me 
+    av_wrd_count = (trw / Word_count) 
 
     W_dist = [(last(p)/(Word_count) * log2(last(p)/(Word_count))) for p in Col_words]  
-    shan_entropy = sum(W_dist)*-1 #return me 
+    shan_entropy = sum(W_dist)*-1 
  
     return Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix
 
@@ -108,19 +115,22 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
 
 # add reactive code to make the UI interactive
 @app begin
-    Document_name = "hamlet_full.txt"
+    @out upfiles = readdir(FILE_PATH)
+    @in Document_sel = "hamlet_full.txt"
     @out Markov_opts = ["a"]
     @in markov_sel = "a"
     @out genText = " "
     @in markov_length = 20
     @out zipfplot = PlotData[]
+    @out layzipf = [PlotLayout(title = PlotLayoutTitle(text="Zipf Distribution"), xaxis=[PlotLayoutAxis(xy="x", title ="Log(Rank)")], yaxis=[PlotLayoutAxis(xy="y", title ="Log(Frequency)")])]
     @out symb_distr = PlotData[]
+    @out laysymb = [PlotLayout(title = PlotLayoutTitle(text="Symbol Distribution"), xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], yaxis=[PlotLayoutAxis(xy="y", title ="Percentage of Text")])]
     @out markovprobdist = PlotData[]
+    @out laymarkov = [PlotLayout(title = PlotLayoutTitle(text="Here"), xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], yaxis=[PlotLayoutAxis(xy="y", title ="Probability")])]
     @out graphname = "The probability that a is followed by:"
 
     # reactive variables are tagged with @in and @out
     @in generateM = false
-    @in start = false
     @out msg = "Word count: 0, Unique words: 0, Average word length: 0, Text entropy: 0"
     # @private defines a non-reactive variable
     @private Word_count = 0.0
@@ -131,9 +141,11 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
 
     # watch a variable and execute a block of code when
     # its value changes
-    @onchange start begin
+    @onchange Document_sel begin
+        upfiles = readdir(FILE_PATH)
+        Document_name = Document_sel
         global Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix = doc_processing(FILE_PATH, Document_name)
-        msg = "Word count: $Word_count, \n Unique words: $unq_wrds, Average word length: $av_wrd_count, Text entropy: $shan_entropy"
+        msg = "Word count: $Word_count, Unique words: $unq_wrds, Average word length: $av_wrd_count, Text entropy: $shan_entropy"
         zipfplot = plotdata(df1, :row, :count, marker = PlotDataMarker(color = plot_colors[1]); groupfeature = :word)
         symb_distr = plotdata(df2, :row, :distribution, plot=StipplePlotly.Charts.PLOT_TYPE_BAR, marker = PlotDataMarker(color = plot_colors[2]); groupfeature = :symbol)
         Markov_opts = df2[!, :symbol]
@@ -150,7 +162,20 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
             genText = mc_path(transition_matrix, Markov_opts, init=rand(1:(size(df2,1))), sample_size=markov_length)
         end
     end
+
+    route("/", method = POST) do
+        files = Genie.Requests.filespayload()
+        for f in files
+            write(joinpath(FILE_PATH, f[2].name), f[2].data)
+        end
+        if length(files) == 0
+            @info "No file uploaded"
+        end
+         upfiles = readdir(FILE_PATH)
+        return "Upload finished"
+    end
 end
+
 
 
 # register a new route and the page that will begin
