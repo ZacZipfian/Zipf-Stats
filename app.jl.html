@@ -5,15 +5,17 @@
             style="max-width: 300px"
             url="http://localhost:8000/"
             label="Upload Text File (.txt)"
-            max-files="1"
+            multiple
             accept=".txt"
             method="POST"
             field__name="txt_file"
-            color="grey"
+            v-on:click="start = !start"
           /> 
+          <q-btn style="background: #0779e4; color: white" v-on:click="start = !start" label="Update list"></q-btn>
+          <q-btn style="background: #525254; color: white" v-on:click="clear = !clear" label="Clear list"></q-btn>
     </div>
     <div class="col col-4 col-sm">
-        <h4>select file</h4>
+        <h4>Select file list</h4>
         <q-select v-model="Document_sel" :options="upfiles"></q-select>
     </div>
     <div class="col col-4 col-sm">
@@ -39,7 +41,7 @@
     </div>
     <div class="col col-6 col-sm">
         <h4 v-text="graphname"></h4>
-        <plotly :data="markovprobdist" :layout="laymarkov"></plotly>
+        <plotly :data="markovprobdist" :layout="laymarkov"></plotly> 
     </div>
 </div>
 <div class="row">
