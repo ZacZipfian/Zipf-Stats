@@ -111,7 +111,7 @@ function doc_processing(FILE_PATH, Document_name)
 
 end
 
-const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
+const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
 
 # add reactive code to make the UI interactive
 @app begin
@@ -122,15 +122,20 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
     @out genText = " "
     @in markov_length = 20
     @out zipfplot = PlotData[]
-    @out layzipf = [PlotLayout(title = PlotLayoutTitle(text="Zipf Distribution"), xaxis=[PlotLayoutAxis(xy="x", title ="Log(Rank)")], yaxis=[PlotLayoutAxis(xy="y", title ="Log(Frequency)")])]
+    @out layzipf = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title = "Log(Rank)")], 
+                                yaxis=[PlotLayoutAxis(xy="y", title = "Log(Frequency)")])
     @out symb_distr = PlotData[]
-    @out laysymb = [PlotLayout(title = PlotLayoutTitle(text="Symbol Distribution"), xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], yaxis=[PlotLayoutAxis(xy="y", title ="Percentage of Text")])]
+    @out laysymb = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], 
+                               yaxis=[PlotLayoutAxis(xy="y", title ="Percentage of Text")])
     @out markovprobdist = PlotData[]
-    @out laymarkov = [PlotLayout(title = PlotLayoutTitle(text="Here"), xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], yaxis=[PlotLayoutAxis(xy="y", title ="Probability")])]
+    @out laymarkov = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], 
+                                 yaxis=[PlotLayoutAxis(xy="y", title ="Probability")])
     @out graphname = "The probability that a is followed by:"
 
     # reactive variables are tagged with @in and @out
     @in generateM = false
+    @in start = false
+    @in clear = false
     @out msg = "Word count: 0, Unique words: 0, Average word length: 0, Text entropy: 0"
     # @private defines a non-reactive variable
     @private Word_count = 0.0
@@ -141,12 +146,15 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
 
     # watch a variable and execute a block of code when
     # its value changes
+    @onchange start begin
+        upfiles = readdir(FILE_PATH)
+    end
     @onchange Document_sel begin
         upfiles = readdir(FILE_PATH)
         Document_name = Document_sel
         global Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix = doc_processing(FILE_PATH, Document_name)
         msg = "Word count: $Word_count, Unique words: $unq_wrds, Average word length: $av_wrd_count, Text entropy: $shan_entropy"
-        zipfplot = plotdata(df1, :row, :count, marker = PlotDataMarker(color = plot_colors[1]); groupfeature = :word)
+        zipfplot = plotdata(df1, :row, :count, marker = PlotDataMarker(color = plot_colors[1]), xaxis="x", yaxis="y"; groupfeature = :word)
         symb_distr = plotdata(df2, :row, :distribution, plot=StipplePlotly.Charts.PLOT_TYPE_BAR, marker = PlotDataMarker(color = plot_colors[2]); groupfeature = :symbol)
         Markov_opts = df2[!, :symbol]
         markovprobdist = plotdata(df3, :rank, Symbol(markov_sel), plot=StipplePlotly.Charts.PLOT_TYPE_BAR, marker = PlotDataMarker(color = plot_colors[3]); groupfeature = :symb)
@@ -162,6 +170,14 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
             genText = mc_path(transition_matrix, Markov_opts, init=rand(1:(size(df2,1))), sample_size=markov_length)
         end
     end
+    @onchange clear begin
+        n = (length(upfiles))
+        for i in 1:n 
+            del_file = upfiles[i]
+            rm(joinpath(FILE_PATH, del_file))
+        end
+        upfiles = readdir(FILE_PATH)
+    end
 
     route("/", method = POST) do
         files = Genie.Requests.filespayload()
@@ -175,8 +191,6 @@ const plot_colors = ["#17a3d1", "#525254", "#da7c2e"]
         return "Upload finished"
     end
 end
-
-
 
 # register a new route and the page that will begin
 # loaded on access
