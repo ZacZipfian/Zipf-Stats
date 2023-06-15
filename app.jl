@@ -4,16 +4,13 @@ using GenieFramework, StipplePlotly
 using StatsBase, DataFrames, Distributions
 @genietools
 
-####
 Genie.config.cors_headers["Access-Control-Allow-Origin"]  =  "*"
 Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type"
 Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
 Genie.config.cors_allowed_origins = ["*"]
-####
 
 const FILE_PATH = "upload"
 mkpath(FILE_PATH)
-
 
 function TransMatxx(Markov)
     n = size(Markov,1);
@@ -44,8 +41,6 @@ function mc_path(P, char_set; init , sample_size)
     return Random_text
 end
 
-
-
 function doc_processing(FILE_PATH, Document_name)
     #words
     DocuString = read(joinpath(FILE_PATH, Document_name), String)
@@ -62,7 +57,6 @@ function doc_processing(FILE_PATH, Document_name)
     distrW = [(last(p)/Word_count) for p in Col_words]
     df1 = DataFrame(row = log.(1:unq_wrds), word = words, count = log.(countW), distribution = distrW)
 
-
     #symbols
     DocuString = replace(DocuString, "\ufeff" => "")
     DocuString = replace(DocuString, "\r" => "")
@@ -75,8 +69,7 @@ function doc_processing(FILE_PATH, Document_name)
     countS = [last(p) for p in CSym] 
     S_dist = [(last(p)/(sum(countS))*100) for p in CSym]  
     df2 = DataFrame(row = 1:length(countS), symbol = symsl, count = countS, distribution = S_dist)
-
-    
+ 
     #Markov chain
     plcS = [first(p) for p in CSym]
     n = length(countS)
@@ -103,18 +96,17 @@ function doc_processing(FILE_PATH, Document_name)
         trw = trw + (length(words[j]) * countW[j])
     end
     av_wrd_count = (trw / Word_count) 
-
     W_dist = [(last(p)/(Word_count) * log2(last(p)/(Word_count))) for p in Col_words]  
     shan_entropy = sum(W_dist)*-1 
- 
-    return Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix
 
+    return Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix
 end
 
 const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
 
 # add reactive code to make the UI interactive
 @app begin
+    # reactive variables are tagged with @in and @out
     @out upfiles = readdir(FILE_PATH)
     @in Document_sel = "hamlet_full.txt"
     @out Markov_opts = ["a"]
@@ -123,7 +115,7 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
     @in markov_length = 20
     @out zipfplot = PlotData[]
     @out layzipf = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title = "Log(Rank)")], 
-                                yaxis=[PlotLayoutAxis(xy="y", title = "Log(Frequency)")])
+                               yaxis=[PlotLayoutAxis(xy="y", title = "Log(Frequency)")])
     @out symb_distr = PlotData[]
     @out laysymb = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], 
                                yaxis=[PlotLayoutAxis(xy="y", title ="Percentage of Text")])
@@ -131,12 +123,11 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
     @out laymarkov = PlotLayout( xaxis=[PlotLayoutAxis(xy="x", title ="Rank")], 
                                  yaxis=[PlotLayoutAxis(xy="y", title ="Probability")])
     @out graphname = "The probability that a is followed by:"
-
-    # reactive variables are tagged with @in and @out
     @in generateM = false
     @in start = false
     @in clear = false
     @out msg = "Word count: 0, Unique words: 0, Average word length: 0, Text entropy: 0"
+    
     # @private defines a non-reactive variable
     @private Word_count = 0.0
     @private unq_wrds = 0.0
@@ -144,15 +135,13 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
     @private shan_entropy = 0.0
     @private allowgen = false
 
-    # watch a variable and execute a block of code when
-    # its value changes
+    # watch a variable and execute a block of code when its value changes
     @onchange start begin
         upfiles = readdir(FILE_PATH)
     end
     @onchange Document_sel begin
         upfiles = readdir(FILE_PATH)
-        Document_name = Document_sel
-        global Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix = doc_processing(FILE_PATH, Document_name)
+        global Word_count, unq_wrds, av_wrd_count, shan_entropy, df1, df2, df3, transition_matrix = doc_processing(FILE_PATH, Document_sel)
         msg = "Word count: $Word_count, Unique words: $unq_wrds, Average word length: $av_wrd_count, Text entropy: $shan_entropy"
         zipfplot = plotdata(df1, :row, :count, marker = PlotDataMarker(color = plot_colors[1]), xaxis="x", yaxis="y"; groupfeature = :word)
         symb_distr = plotdata(df2, :row, :distribution, plot=StipplePlotly.Charts.PLOT_TYPE_BAR, marker = PlotDataMarker(color = plot_colors[2]); groupfeature = :symbol)
@@ -179,7 +168,7 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
         upfiles = readdir(FILE_PATH)
     end
 
-    route("/", method = POST) do
+    route("/upload", method = POST) do
         files = Genie.Requests.filespayload()
         for f in files
             write(joinpath(FILE_PATH, f[2].name), f[2].data)
@@ -192,7 +181,6 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
     end
 end
 
-# register a new route and the page that will begin
 # loaded on access
 @page("/", "app.jl.html")
 Server.isrunning() || Server.up()
