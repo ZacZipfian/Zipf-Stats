@@ -3,13 +3,12 @@
     <div class="col col-4 col-sm">
             <q-uploader
             style="max-width: 300px"
-            url="http://localhost:8000/"
+            url="/upload
             label="Upload Text File (.txt)"
             multiple
             accept=".txt"
             method="POST"
             field__name="txt_file"
-            v-on:click="start = !start"
           /> 
           <q-btn style="background: #0779e4; color: white" v-on:click="start = !start" label="Update list"></q-btn>
           <q-btn style="background: #525254; color: white" v-on:click="clear = !clear" label="Clear list"></q-btn>
