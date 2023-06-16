@@ -124,7 +124,6 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
                                  yaxis=[PlotLayoutAxis(xy="y", title ="Probability")])
     @out graphname = "The probability that a is followed by:"
     @in generateM = false
-    @in start = false
     @in clear = false
     @out msg = "Word count: 0, Unique words: 0, Average word length: 0, Text entropy: 0"
     
@@ -136,7 +135,7 @@ const plot_colors = ["#0779e4", "#525254", "#da7c2e"]
     @private allowgen = false
 
     # watch a variable and execute a block of code when its value changes
-    @onchange start begin
+    @event :uploaded begin
         upfiles = readdir(FILE_PATH)
     end
     @onchange Document_sel begin
