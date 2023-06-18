@@ -1,6 +1,6 @@
 module App
 # set up Genie development environmet
-using GenieFramework, StipplePlotly
+using GenieFramework
 using StatsBase, DataFrames, Distributions
 @genietools
 
