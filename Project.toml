@@ -4,3 +4,11 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
 GenieFramework = "a59fdf5c-6bf0-4f5d-949c-a137c9e2f353"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+DataFrames = "1.5"
+Distributions = "0.25.95"
+Genie = "5.18.1"
+GenieFramework = "1.19"
+StatsBase = "0.34"
+julia = "1.8.5"
